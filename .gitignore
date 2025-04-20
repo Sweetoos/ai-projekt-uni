@@ -1,0 +1,5 @@
+*.local
+.vscode
+venv
+.DS_Store
+*.pkl
