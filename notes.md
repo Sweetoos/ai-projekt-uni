@@ -14,7 +14,23 @@ pip install -r requirements.txt
 git lfs install
 git clone https://huggingface.co/datasets/chirunder/text_messages
 
+source venv/bin/activate
 python3 src/1_prepare_data.py
 python3 src/2_train.py
 python3 src/3_predict.py
 ```
+
+# Treść
+
+## Wstęp
+
+- Klasyczne podejścia w przetwarzaniu tekstu
+- Podejścia AI
+- Wstęp teoretyczny LSTM
+
+## Dane
+
+- Opis danych
+- Lematyzacja
+- Reprezentacja danych
+- Sposób kodowania

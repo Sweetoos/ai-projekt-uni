@@ -16,10 +16,11 @@ from pathlib import Path
 INPUT_PARQUET = "text_messages/data/train-00001-of-00002-889c5bcac2961f1b.parquet"
 TEXT_COLUMN = "text"
 OUTPUT_DATASET = "dataset.pkl"
+OUTPUT_VOCAB = "vocab.pkl"
 CONTEXT_SIZE = 3
 
 # Make a dataset of 10% for training
-DROP_RATE = 0.9
+DROP_RATE = 0.99
 
 # Load
 df = pd.read_parquet(INPUT_PARQUET)
@@ -31,7 +32,7 @@ print("Sentences extracted")
 def clean_text(text):
     text = text.lower()
     text = re.sub(rf"[{re.escape(string.punctuation)}]", "", text)  # remove punctuation
-    text = re.sub(r"\d+", "", text)  # remove numbers
+    text = re.sub(r"\d+", "", text)  # TODO: instead of removing just numbers, remove the entry entirely
     text = re.sub(r"\s+", " ", text).strip()  # clean up extra spaces
     return text
 
@@ -79,7 +80,7 @@ dataset = make_dataset(cleaned_sentences, word2idx, CONTEXT_SIZE)
 print("Dataset created")
 
 # Save to disk
-output = {
+dataset = {
     "dataset": dataset,
     "word2idx": word2idx,
     "idx2word": idx2word,
@@ -87,6 +88,9 @@ output = {
 }
 
 with open(OUTPUT_DATASET, "wb") as f:
-    pickle.dump(output, f)
-
+    pickle.dump(dataset, f)
 print(f"Saved dataset with {len(dataset)} entries to '{OUTPUT_DATASET}'")
+
+with open(OUTPUT_VOCAB, "wb") as f:
+    pickle.dump((word2idx, idx2word, vocab_size), f)
+print(f"Saved vocab of length {vocab_size} to '{OUTPUT_VOCAB}'")
