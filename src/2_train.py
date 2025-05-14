@@ -41,7 +41,7 @@ class WordDataset(Dataset):
         x, y = self.data[idx]
         return torch.tensor(x, dtype=torch.long), torch.tensor(y, dtype=torch.long)
 
-batch_size = 50000
+batch_size = 10000
 dataloader = DataLoader(WordDataset(dataset), batch_size=batch_size, shuffle=True)
 
 # Train model
@@ -52,13 +52,14 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.01)
 mem()
 
-n_epochs = 10
+n_epochs = 30
 for epoch in range(n_epochs):
     print(f"Epoch {epoch+1}/{n_epochs}")
     mem()
     epoch_loss = 0.0
     for batch_idx, (batch_x, batch_y) in enumerate(dataloader):
-        print(f"Batch {batch_idx + 1}/{len(dataloader)}")
+        if (batch_idx + 1) % 50 == 0:
+            print(f"Epoch {epoch+1}/{n_epochs} Batch {batch_idx + 1}/{len(dataloader)}")
         batch_x = batch_x.to(device)
         batch_y = batch_y.to(device)
         optimizer.zero_grad()
@@ -69,9 +70,9 @@ for epoch in range(n_epochs):
         epoch_loss += loss.item() * batch_x.size(0)
 
     avg_loss = epoch_loss / len(dataset)
-    if (epoch + 1) % 20 == 0:
-        print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
+    print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
+    print(f"Saving model...")
+    torch.save(model.state_dict(), f"lstm_word_predictor_epoch_{epoch+1}.pth")
 
-# Persist
 print("Saving model...")
 torch.save(model.state_dict(), "lstm_word_predictor.pth")

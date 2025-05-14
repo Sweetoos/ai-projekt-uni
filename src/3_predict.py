@@ -11,7 +11,7 @@ with open("vocab.pkl", "rb") as f:
 
 # Load model
 model = LSTMWordPredictor(vocab_size, embedding_dim, hidden_dim)
-model.load_state_dict(torch.load("lstm_word_predictor.pth"))
+model.load_state_dict(torch.load("lstm_word_predictor.pth", map_location=torch.device('cpu')))
 model.eval()
 
 # Predict
@@ -47,5 +47,12 @@ test_context = ["we", "are", "going", "to"]
 predicted = predict_next_word(model, test_context)
 print(f"Input: {' '.join(test_context)} --> {predicted}")
 
-predicted_few = predict_n_words(model, test_context, 3)
-print(f"Input: {' '.join(test_context)} --> {' '.join(predicted_few)}")
+def test_few(test_context):
+    predicted_few = predict_n_words(model, test_context, 5)
+    print(f"Input: {' '.join(test_context)} --> {' '.join(predicted_few)}")
+
+test_few(["we", "are"])
+test_few(["we", "are", "going", "to"])
+test_few(["iphone"])
+test_few(["the"])
+test_few(["i", "believe"])
