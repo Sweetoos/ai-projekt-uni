@@ -16,6 +16,7 @@ from pathlib import Path
 INPUT_PARQUET = "text_messages/data/train-00001-of-00002-889c5bcac2961f1b.parquet"
 TEXT_COLUMN = "text"
 OUTPUT_DATASET = "dataset.pkl"
+OUTPUT_DATASET_META = "dataset_meta.pkl"
 OUTPUT_VOCAB = "vocab.pkl"
 CONTEXT_SIZE = 3
 
@@ -79,7 +80,7 @@ def make_dataset(sentences, word2idx, context_size=3):
             try:
                 context_idx = [word2idx.get(w, word2idx[UNK_TOKEN]) for w in context]
                 target_idx = word2idx[target]
-                data.append((context_idx, target_idx))
+                data.append({ "x": context_idx, "y": target_idx })
             except KeyError:
                 continue  # skip if any word is not in vocab
     return data
@@ -88,16 +89,19 @@ dataset = make_dataset(cleaned_sentences, word2idx, CONTEXT_SIZE)
 print("Dataset created")
 
 # Save to disk
-dataset = {
-    "dataset": dataset,
+dataset_meta = {
     "word2idx": word2idx,
     "idx2word": idx2word,
     "vocab_size": vocab_size
 }
 
-with open(OUTPUT_DATASET, "wb") as f:
-    pickle.dump(dataset, f)
-print(f"Saved dataset with {len(dataset)} entries to '{OUTPUT_DATASET}'")
+with open(OUTPUT_DATASET_META, "wb") as f:
+    pickle.dump(dataset_meta, f)
+print(f"Saved dataset meta to '{OUTPUT_DATASET_META}'")
+
+df = pd.DataFrame(dataset)
+df.to_parquet("dataset.parquet", index=False)
+print(f"Saved dataset")
 
 with open(OUTPUT_VOCAB, "wb") as f:
     pickle.dump((word2idx, idx2word, vocab_size), f)

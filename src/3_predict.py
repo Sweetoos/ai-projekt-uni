@@ -36,7 +36,7 @@ def predict_n_words(model, initial_context, n_words):
         with torch.no_grad():
             output = model(input_tensor)
             probs = torch.softmax(output, dim=1).numpy()[0]
-            predicted_idx = np.argmax(probs)  # or use np.random.choice for sampling
+            predicted_idx = np.argmax(probs)
             predicted_word = idx2word[predicted_idx]
 
         context.append(predicted_word)
@@ -48,11 +48,13 @@ predicted = predict_next_word(model, test_context)
 print(f"Input: {' '.join(test_context)} --> {predicted}")
 
 def test_few(test_context):
-    predicted_few = predict_n_words(model, test_context, 5)
+    predicted_few = predict_n_words(model, test_context, 10)
     print(f"Input: {' '.join(test_context)} --> {' '.join(predicted_few)}")
 
 test_few(["we", "are"])
-test_few(["we", "are", "going", "to"])
-test_few(["iphone"])
+test_few(["the", "iphone"])
 test_few(["the"])
 test_few(["i", "believe"])
+test_few(["not"])
+test_few(["i"])
+test_few(["what", "were"])

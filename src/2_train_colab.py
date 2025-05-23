@@ -1,0 +1,77 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+import pyarrow.parquet as pq
+import os, psutil, pickle
+
+def mem():
+    print(f"Memory usage: {psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2:.2f} MB")
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using device:", device)
+
+with open("drive/MyDrive/Personal/ai-projekt/dataset_meta.pkl", "rb") as f:
+    meta = pickle.load(f)
+
+vocab_size = meta["vocab_size"]
+word2idx = meta["word2idx"]
+idx2word = meta["idx2word"]
+
+class LazyParquetDataset(Dataset):
+    def __init__(self, parquet_path):
+        self.table = pq.read_table(parquet_path, columns=["x", "y"])
+        self.length = self.table.num_rows
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, idx):
+        x = self.table.column("x")[idx].as_py()
+        y = self.table.column("y")[idx].as_py()
+        return torch.tensor(x, dtype=torch.long), torch.tensor(y, dtype=torch.long)
+
+batch_size = 2048
+dataloader = DataLoader(LazyParquetDataset("drive/MyDrive/Personal/ai-projekt/dataset.parquet"),
+                        batch_size=batch_size, shuffle=True)
+
+class LSTMWordPredictor(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self, x):
+        emb = self.embedding(x)
+        out, _ = self.lstm(emb)
+        out = self.fc(out[:, -1, :])
+        return out
+
+embedding_dim = 50
+hidden_dim = 100
+model = LSTMWordPredictor(vocab_size, embedding_dim, hidden_dim).to(device)
+
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+n_epochs = 30
+for epoch in range(n_epochs):
+    print(f"Epoch {epoch+1}/{n_epochs}")
+    mem()
+    epoch_loss = 0.0
+    for batch_idx, (batch_x, batch_y) in enumerate(dataloader):
+        if (batch_idx + 1) % 50 == 0:
+            print(f"Epoch {epoch+1}/{n_epochs} Batch {batch_idx + 1}/{len(dataloader)}")
+        batch_x = batch_x.to(device)
+        batch_y = batch_y.to(device)
+        optimizer.zero_grad()
+        output = model(batch_x)
+        loss = criterion(output, batch_y)
+        loss.backward()
+        optimizer.step()
+        epoch_loss += loss.item() * batch_x.size(0)
+
+    avg_loss = epoch_loss / len(dataloader.dataset)
+    print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
+    torch.save(model.state_dict(), f"drive/MyDrive/Personal/ai-projekt/lstm_word_predictor_epoch_{epoch+1}.pth")
