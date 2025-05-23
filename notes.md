@@ -4,6 +4,7 @@
 - Dataset https://huggingface.co/datasets/chirunder/text_messages
 - https://developer.nvidia.com/blog/mastering-llm-techniques-data-preprocessing
 - https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+- https://pl.eitca.org/sztuczna-inteligencja/eitc-ai-dltf-g%C5%82%C4%99bokie-uczenie-z-tensorflow/rekurencyjne-sieci-neuronowe-w-tensorflow/Przyk%C5%82ad-rnn-w-tensorflow/egzamin-przegl%C4%85d-rnn-przyk%C5%82ad-w-tensorflow/co-to-jest-kom%C3%B3rka-lstm-i-dlaczego-jest-u%C5%BCywana-w-implementacji-rnn/
 
 # Uruchamianie (mac)
 ```
@@ -11,7 +12,7 @@ brew install git-lfs
 
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 git lfs install
 git clone https://huggingface.co/datasets/chirunder/text_messages
@@ -70,7 +71,8 @@ TODO KACPER
 
 ## Wstęp teoretyczny do LSTM
 
-LSTM jest ulepszoną wersją RNN (Recurrent Neural Network), która może utrzymywać zależności na długi okres czasu w danych sekwencyjnych.
+LSTM jest ulepszoną wersją RNN (Recurrent Neural Network), która świetnie działaja w większej ilości problemów i są powszechnie stosowane. Zaprojektowane są by rozwiązywać długoterminowe problemy zależności. Ich zapamiętywanie informacji w długim przedziale czasu jest rzeczą dla nich naturalną. Sieci neuronowe mają budowę zapętlonego łańcucha. LSTM również taką ma, natomiast każdy moduł jest inny i niekoniecznie jest taki prosty jak we wszystkich RNN. 
+Jakby porównać to do układów cyfrowych, zwykły RNN jest układem z jedną bramką, natomast LSTM ma tych bramek więcej, przez co mogą wyjść różne wartości na wyjście. Kontynuując analogię do układów cyfrowych powiedzmy że LSTM ma umiejętność tworzenia oraz usuwania bramek w swoim układzie, 
 
 # Przygotowanie danych
 
@@ -99,6 +101,7 @@ Dane przygotowujemy w następujący sposób:
 ## Sposób kodowania
 
 ## Reprezentacja danych gotowych do trenowania
+
 
 # Model LSTM przewidujący następne słowo
 
@@ -157,7 +160,7 @@ Input: not --> not a problem with the stock rom and the phone is
 Input: i --> i have a few more pics of the new ones and
 Input: what were --> what were you doing with the new one and the other one
 ```
-Efekty są juz zadowalające, przewidywany tekst ma poprawną składnię, a sens jest porównywalny do
+Efekty są już zadowalające, przewidywany tekst ma poprawną składnię, a sens jest porównywalny do
 autouzupełniania dostępnego w nowoczesnych urządzeniach mobilnych.
 
 # Podsumowanie
