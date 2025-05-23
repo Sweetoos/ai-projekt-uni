@@ -24,24 +24,43 @@ python3 src/3_predict.py
 
 # Treść
 
-## Wstęp
+1. Cel projektu
+2. Wstęp teoretyczny
+  - Wstęp do Danych
+  - Klasyczne podejścia w przetwarzaniu tekstu
+  - Podejścia AI w przetwarzaniu tekstu
+  - Wstęp teoretyczny do LSTM
+3. Przygotowanie danych
+  - Wybór zbioru gotowych do trenowania
+  - Format danych zbioru
+  - Przygotowanie zbioru do uczenia
+  - Lematyzacja
+  - Sposób kodowania
+  - Reprezentacja danych gotowych do trenowania
+4. Model LSTM przewidujący następne słowo
+  - Zasada działania
+5. Trenowanie i testowanie modelu
+  - Prototyp #1
+  - Prototyp #2
+  - Wersja końcowa
+6. Podsumowanie
+7. Bibliografia
 
-- Klasyczne podejścia w przetwarzaniu tekstu
-- Podejścia AI
-- Wstęp teoretyczny LSTM
+# Cel projektu
 
-## Dane
+TODO KACPER: przewidywanie tekstu, autouzupełnianie, nauka LSTM
 
-- Opis danych
-- Lematyzacja
-- Reprezentacja danych
-- Sposób kodowania
+# Wstęp teoretyczny
 
-# Wstęp o Danych
+## Wstęp do Danych
 
 W zależności od modelu, który piszemy, dane będą się różnić, ale cel pozostaje ten sam. Ważne jest rozszerzenie plików danych, z którego importujemy nasze dane, ponieważ dane importowane z internetu są zazwyczaj w skompresowanej formie (np .warc.gz, tar.gz czy .zip). Te pliki są konwertowane do rozszerzeń bardziej przyjaznych do przetwarzania tekstu jak .jsonl czy .parquet. Dane należy oczyścić, gdyż dane mogą zawierać znaki bardziej złożone niż w alfabecie łacińskim jak np. `ł`, `ó`, `ź`, czy też mogą mieć różną wielkość liter i trzeba to poprawić. W importowanych zasobach kluczowe jest pozbycie się wszelkich duplikatów dla poprawy szybkości modelu językowego oraz zapewnienia różnorodności generowanego tekstu. Pomaga to zapobieganiu nadmiernego dopasowania modelu dla powtarzalnej treści. Ten proces można zaimplementować trzema podejściami: dokładnym, rozmytym oraz semantycznej deduplikacji. 
 
-## Podejścia AI
+## Klasyczne podejścia w przetwarzaniu tekstu
+
+TODO KACPER
+
+## Podejścia AI w przetwarzaniu tekstu
 
 **Dokładne** - skupia się na zidentyfikowaniu i usunięciu kompletnie identycznych dokumentów. To podejście generuje klucz dla każdego dokumentu oraz grupuje te dokumenty przez ich klucze do kubełków, tak by trzymać jeden dokument na kubełek. Zaletą takiego podejścia jest efektywność, szybkość oraz niezawodność, a wadą jest ograniczenie do wykrywania idealnego dopasowania do treści, co może spowodować ominięcie semantycznie porównywalnych dokumentów z drobnymi wariacjami. 
 
@@ -49,9 +68,21 @@ W zależności od modelu, który piszemy, dane będą się różnić, ale cel po
 
 **Semantyczne** - reprezentuje najbardziej zaawansowane podejście wykorzystujące nowoczesne modele osadzania (embedding), które uchwytują znaczenie semantyczne danych, w połączeniu z technikami klasteryzacji do grupowania semantycznie podobnych treści. Badania wykazały, że deduplikacja semantyczna skutecznie zmniejsza rozmiar zbioru danych, jednocześnie utrzymując lub nawet poprawiając wydajność modelu. Jest szczególnie przydatna w wykrywaniu parafraz, tłumaczeń tego samego materiału oraz treści o identycznym znaczeniu. Aby dokonać deduplikacji semantycznej wpierw trzeba przekształcić każdy punkt danych na wektor za pomocą wstępnie wytrenowanego modelu. Grupujemy te wektory w k klastrów przy użyciu algorytmu k-średnich (k-means). Wewnątrz każdego takiego klastra obliczane są pary podobieństw cosinusowych. Każdej parze danych, której podobieństwo cosinusowe przekracza ustalony próg, przypisuje się status semantycznych duplikatów. Z każdej grupy semantycznych duplikatów w klastrze zachowuje się tylko jeden reprezentatywny punkt danych, reszta jest usuwana.
 
+## Wstęp teoretyczny do LSTM
+
+LSTM jest ulepszoną wersją RNN (Recurrent Neural Network), która może utrzymywać zależności na długi okres czasu w danych sekwencyjnych.
+
 # Przygotowanie danych
 
-Do projektu wykorzystujemy dataset [chirunder/text_messages z Huggingface](https://huggingface.co/datasets/chirunder/text_messages). Dane przygotowujemy w następujący sposób:
+## Wybór zbioru
+
+Do projektu wykorzystujemy dataset [chirunder/text_messages z Huggingface](https://huggingface.co/datasets/chirunder/text_messages).
+
+## Format danych zbioru
+
+## Przygotowanie zbioru do uczenia
+
+Dane przygotowujemy w następujący sposób:
 1. Losowa część rekordów jest usuwana (w przypadku, gdy potrzebujemy mniejszy dataset do testów)
 2. Tekst jest zamieniany na wyłącznie małe litery (lowercase)
 3. Usuwane są znaki interpunkcyjne oraz liczby
@@ -63,11 +94,17 @@ Do projektu wykorzystujemy dataset [chirunder/text_messages z Huggingface](https
 9. Przypadki są zapisywane do pliku w formacie parquet, który umozliwia ładowanie danych do pamięci operacyjnej w częściach.
 10. Metadane, czyli informacje o słowniku oraz lookup table słownika są zapisywane w formacie pickle, gdyz mogą być załadowane w całości ze względu na mały rozmiar.
 
-# Wstęp do LSTM
+## Lematyzacja
 
-LSTM jest ulepszoną wersją RNN (Recurrent Neural Network), która może utrzymywać zależności na długi okres czasu w danych sekwencyjnych.
+## Sposób kodowania
+
+## Reprezentacja danych gotowych do trenowania
 
 # Model LSTM przewidujący następne słowo
+
+TODO
+
+# Trenowanie i testowanie modelu
 
 ## Prototyp #1
 
@@ -79,7 +116,7 @@ Prototyp #1 ma ponizsze parametry:
 
 Trenowanie jednej epoki trwało około 5 minut. Wyniki testów są następujące:
 ```
-TODO
+TODO MICHAL
 ```
 
 ## Prototyp #2
@@ -122,3 +159,20 @@ Input: what were --> what were you doing with the new one and the other one
 ```
 Efekty są juz zadowalające, przewidywany tekst ma poprawną składnię, a sens jest porównywalny do
 autouzupełniania dostępnego w nowoczesnych urządzeniach mobilnych.
+
+# Podsumowanie
+
+TODO KACPER
+
+# Bibliografia
+
+## Pozycje zwarte
+
+Tadeusiewicz R., Sieci Neuronowe, Kraków, 2008
+
+(ibidem, strona)
+
+## Pozycje internetowe
+
+Jan K., Tytuł, https://example.com
+Dostęp 01.01.1970
