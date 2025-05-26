@@ -37,7 +37,7 @@ python3 src/3_predict.py
   - Przygotowanie zbioru do uczenia
   - Lematyzacja
   - Sposób kodowania
-  - Reprezentacja danych gotowych do trenowania
+  - Reprezentacja danych treningowych
 4. Model LSTM przewidujący następne słowo
   - Zasada działania
 5. Trenowanie i testowanie modelu
@@ -82,30 +82,91 @@ Do projektu wykorzystujemy dataset [chirunder/text_messages z Huggingface](https
 
 ## Format danych zbioru
 
+Zbiór danych składa się z dwóch plików parquet, stworzonych z jednej kolumny `text`.
+Zbiór zawiera 11.6 miliona zdań, kazdy jako osobny wiersz o długości od 2 do 3010 znaków.
+Zdania są w języku angielskim. Zaczynają się wielką literą, a kończą kropką. Zdania są wiadomościami
+tekstowymi pochodzącymi z komunikacji pomiędzy ludźmi. Do trenowania wykorzystujemy jeden z plików,
+o wadze 281.7 MB.
+
 ## Przygotowanie zbioru do uczenia
+
+Aby model mógł efektywnie się uczyć i sugerować poprawne podpowiedzi, surowe dane nalezy
+przetworzyć. W tym celu usuwamy interpunkcję, liczby, zamieniamy słowa na małe litery. Czyścimy
+zbiór z niechcianych podpowiedzi. Zbiór przetwarzamy za pomocą skryptu w napisanego w języku python.
+Jest on zapisany w pliku `src/1_prepare_data.py`.
 
 Dane przygotowujemy w następujący sposób:
 1. Losowa część rekordów jest usuwana (w przypadku, gdy potrzebujemy mniejszy dataset do testów)
 2. Tekst jest zamieniany na wyłącznie małe litery (lowercase)
 3. Usuwane są znaki interpunkcyjne oraz liczby
 4. Tekst jest "trymowany", usuwane są początkowe i końcowe spacje
-5. Tekst jest dzielony na słowa
-6. Wybierane jest 10 000 najpopularniejszych słów, które zostają. Pozostałe są zamieniane na token `<UNK>`
-7. Tworzony jest słownik, tablica z 10 001 elementami, w której kazde słowo występuje tylko raz. Dzięki temu mozna przypisać kazdemu słowu liczbę będącą indeksem tego słowa w tablicy.
+5. Tekst jest dzielony na słowa w słowniku
+6. Dokonujemy lematyzacji
 8. Ze zdań tworzone są dane do trenowania - ciąg trzech słów mapowany jest do następnego wyrazu w zdaniu. Dane są zapisywane jako liczby, korzystając ze słownika.
 9. Przypadki są zapisywane do pliku w formacie parquet, który umozliwia ładowanie danych do pamięci operacyjnej w częściach.
 10. Metadane, czyli informacje o słowniku oraz lookup table słownika są zapisywane w formacie pickle, gdyz mogą być załadowane w całości ze względu na mały rozmiar.
 
-## Lematyzacja
+## Lematyzacja, sposób kodowania
 
-## Sposób kodowania
+Nie chcemy, by model zajmował się rzadkimi słowami, gdyz zwiększa to złozoność modelu dając minimalne korzyści. Dlatego wybierane jest 10 000 najpopularniejszych słów, które chcemy podpowiadać. Pozostałe są zamieniane na token `<UNK>`
+Tworzony jest słownik, tablica z 10 001 elementami, w której kazde słowo występuje tylko raz. Dzięki temu mozna przypisać kazdemu słowu liczbę będącą indeksem tego słowa w tablicy.
 
-## Reprezentacja danych gotowych do trenowania
+## Reprezentacja danych
 
+Dane dzielimy na kilka plików:
+- Plik słownika (vocab.pkl)
+- Plik z danymi treningowymi
+
+Plik słownika zawiera prostą strukturę z trzema danymi:
+- Lookup table word to index - słownik mapujący słowo do liczby
+- Lookup table index to word - słownik mapujący liczbę do słowa
+- vocab_size - liczbę słów w słowniku
+
+Dane są zapisywane w formacie pickle (pkl) za pomocą biblioteki słownika.
+
+Plik z danymi treningowymi jest zapisywany w formacie parquet, który umozliwia ładowanie danych
+do pamięci operacyjnej w kawałkach. Format danych jest następujący:
+- Zbiór składa się z listy słowników
+- Kazdy słownik zawiera 2 pola, x i y
+- Pole x składa się z krotki (tuple) zawierającej 1-3 wyrazy poprzedzające następne słowo, jako liczba
+- Pole y jest liczbą reprezentującą słowo następujące po ciągu
+
+Przykładowo, dla słownika `ale = 0, ala = 1, ma = 2, kota = 3` i jedynej danej treningowej
+`ale ala ma -> kota`, plik będzie zawierał następującą strukturę:
+```
+[
+  { "x": (0, 1, 2), "y": 3 }
+]
+```
 
 # Model LSTM przewidujący następne słowo
 
-TODO
+TODO KACPER opisać ze uzywamy pytorch
+
+```py
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+embedding_dim = 50
+hidden_dim = 100
+
+class LSTMWordPredictor(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim):
+        print(f"Initializing model with vocab_size={vocab_size}, embedding_dim={embedding_dim}, hidden_dim={hidden_dim}")
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self, x):
+        emb = self.embedding(x)
+        out, _ = self.lstm(emb)
+        out = self.fc(out[:, -1, :])  # Use output from last timestep
+        return out
+```
+
+TODO KACPER o co chodzi w tym kodzie
 
 # Trenowanie i testowanie modelu
 
@@ -113,14 +174,43 @@ TODO
 
 Prototyp #1 ma ponizsze parametry:
 - 10% danych do treningu
-- 6 epok
+- 5, a następnie 10 epok
 - Wszystkie słowa, bez filtra najpopularniejszych
 - learning_rate = 0.01, embedding_dim = 50, hidden_dim = 100
+- Rozmiar: 65.8 MB (plik pth) + 2.5 MB (vocab.pkl)
 
-Trenowanie jednej epoki trwało około 5 minut. Wyniki testów są następujące:
+Trenowanie jednej epoki trwało około 5 minut. Wyniki testów dla 5 epok są następujące:
 ```
-TODO MICHAL
+Initializing model with vocab_size=108514, embedding_dim=50, hidden_dim=100
+Input: we are going to --> be
+Input: we are --> we are not going to be a good idea to be a
+Input: the iphone --> the iphone is a good idea to be a little more than
+Input: the --> the first time i have a problem with the new one
+Input: i believe --> i believe that the car is a little more than a few
+Input: not --> not sure if i can get a new thread to the
+Input: i --> i will be able to get a good deal with the
+Input: what were --> what were going to be the same thing that i have been
 ```
+
+Natomiast po 10 epokach model zachowuje się następująco:
+```
+Initializing model with vocab_size=108514, embedding_dim=50, hidden_dim=100
+Input: we are going to --> be
+Input: we are --> we are not going to be a lot of time to get
+Input: the iphone --> the iphone is a little more expensive and i am not sure
+Input: the --> the best way to do it with the other side of
+Input: i believe --> i believe that the guy who is a good thing to do
+Input: not --> not lobbing the forum and i was thinking about the same
+Input: i --> i think it will be a good looking car and i
+Input: what were --> what were talking about the same thing i have to do it
+```
+
+Model poprawnie przewiduje wyrazy, które mogą następować po sobie. Utworzone ciągi nie tworzą
+jednak logicznych zdań. Aby poprawić model, w następnej iteracji wykorzystamy pełny zbiór danych.
+Obecny model generuje wyłącznie krótkie, popularne słowa. Jest to w naszym przypadku duza zaleta.
+Aby model nie uczył się rzadkich wyrazów, które nie będą chętnie wybierane przez uzytkownikow,
+postanawiamy trenować zbiór 10 000 najpopularniejszymi wyrazami, a resztę zastępować tokenem `<UNK>`.
+Ta zmiana powinna takze znacząco zmniejszyć rozmiar modelu.
 
 ## Prototyp #2
 Prototyp #2 ma ponizsze parametry:
@@ -128,8 +218,9 @@ Prototyp #2 ma ponizsze parametry:
 - 1 epoka
 - 10 tysięcy najpopularniejszych słów + token `<UNK>`
 - learning_rate = 0.01, embedding_dim = 50, hidden_dim = 100
+- Rozmiar: 6.3 MB (plik pth) + 201 KB (vocab.pkl)
 
-Trenowaie jednej epoki trwało około 43 minuty. Wyniki testów są następujące:
+Trenowanie jednej epoki trwało około 43 minuty. Wyniki testów są następujące:
 ```
 Input: we are going to --> be
 Input: we are --> we are not a fan of the car and i have a
@@ -141,12 +232,21 @@ Input: i --> i have a few questions and i have been looking for
 Input: what were --> what were you looking for a good idea to do it and
 ```
 
+Generowane ciągi słów mają gramatyczny sens, ale model szybko "gubi się" i zatraca sens wypowiedzi.
+Zdarzają się pętle (np. `the same thing is the same thing is that the same`).
+Duzym problemem zdaje się mały kontekst danych, będący jedynie trzema ostatnimi słowami.
+Zdaje się on powodować zdania bez sensu (np. `what were you looking for a good idea to do it and`).
+Zwiększenie kontekstu do 6 czy 10 wyrazów znacznie zwiększy złozoność i czas uczenia się, dlatego
+decydujemy się sprawdzić większą ilość epok przy niezmienionej długości kontekstu. Mamy nadzieję,
+ze uda się wygenerować satysfakcjonujące wyniki bez zwiększenia kontekstu.
+
 ## Wersja końcowa
 Wersja końcowa ma ponizsze parametry:
 - 100% danych do treningu
 - 5 epok
 - 10 tysięcy najpopularniejszych słów + token `<UNK>`
 - learning_rate = 0.01, embedding_dim = 50, hidden_dim = 100
+- Rozmiar: 6.3 MB (plik pth) + 201 KB (vocab.pkl)
 
 Trenowanie zajęło 5x 43 min = 3h 35 min. Wyniki testów są następujące:
 ```
@@ -160,8 +260,17 @@ Input: not --> not a problem with the stock rom and the phone is
 Input: i --> i have a few more pics of the new ones and
 Input: what were --> what were you doing with the new one and the other one
 ```
-Efekty są już zadowalające, przewidywany tekst ma poprawną składnię, a sens jest porównywalny do
-autouzupełniania dostępnego w nowoczesnych urządzeniach mobilnych.
+Efekty są juz zadowalające, przewidywany tekst ma poprawną składnię, a zachowywanie sensu wypowiedzi
+jest porównywalne do prostych modeli autouzupełniania dostępnych w nowoczesnych urządzeniach
+mobilnych. Nadal widoczne jest szybkie zapominanie, ale model działa znacznie lepiej niz w
+prototypie #2. Kolejnym widocznym problemem jest naduzywanie przedimków (the, a), spójników (and),
+przyimków czy krótkich słów (is, it, for). Są to zwroty często uzywane w krótkich wiadomościach
+tekstowych. Model zdaje się preferować te słowa, gdyz występują nader często w danych testowych.
+Gdybyśmy chcieli generować długie teksty byłby to duzy problem, który nalezałoby mitygować poprzez
+odpowiednie dobranie danych i zmniejszenie częstotliwości występowania tych wyrazów. Jako ze
+celem projektu jest podpowiadanie słów wiadomości tekstowych, problem ten jest w rzeczywistości
+zaletą - uzytkownicy często wybierają krótkie wiadomości zawierające wiele tego typu słów.
+Z tego powodu uznajemy model za dostatecznie dobry dla naszego przypadku.
 
 # Podsumowanie
 
