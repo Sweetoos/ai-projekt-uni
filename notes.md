@@ -5,6 +5,7 @@
 - https://developer.nvidia.com/blog/mastering-llm-techniques-data-preprocessing
 - https://colah.github.io/posts/2015-08-Understanding-LSTMs/
 - https://pl.eitca.org/sztuczna-inteligencja/eitc-ai-dltf-g%C5%82%C4%99bokie-uczenie-z-tensorflow/rekurencyjne-sieci-neuronowe-w-tensorflow/Przyk%C5%82ad-rnn-w-tensorflow/egzamin-przegl%C4%85d-rnn-przyk%C5%82ad-w-tensorflow/co-to-jest-kom%C3%B3rka-lstm-i-dlaczego-jest-u%C5%BCywana-w-implementacji-rnn/
+- https://web.stanford.edu/~jurafsky/slp3/3.pdf
 
 # Uruchamianie (mac)
 ```
@@ -51,6 +52,8 @@ python3 src/3_predict.py
 
 TODO KACPER: przewidywanie tekstu, autouzupełnianie, nauka LSTM
 
+Głównym celem projektu było zbadanie i zaimplementowanie modelu do przewidywania następnego słowa w sekwencji tekstowej, z potencjalnym zastosowaniem w systemach autouzupełniania. Projekt skupiał się na wykorzystaniu architektury sieci neuronowej typu long Short-Term Memory (LSTM). Dodatkowym clem było praktyczne zapoznanie się z działaniem, trenowaniem oraz ewaluacją modeli LSTM w kontekście przetwarzania języka naturalnego.
+
 # Wstęp teoretyczny
 
 ## Wstęp do Danych
@@ -61,6 +64,15 @@ W zależności od modelu, który piszemy, dane będą się różnić, ale cel po
 
 TODO KACPER
 
+Przed erą zaawansowanych modeli głębokiego nauczania, przetwarzanie tekstu było oparte o metody statystyczne i algorytmiczne. Kluczowymi podejściami, szczególnie w kontekście modelowania języka i przewidywania tekstu, należą:
+
+**N-gramy** - Sekwencje N kolejnych słów (lub znaków) w tekście. Modele oparte na N-gramach przewidują następne słowo na podstawie prawdopodobieństwa jego wystąpienia po sekwencji N-1 poprzedzających słów, obliczanego na podstawie częstotliwości w korpusie treningowym. Są proste obliczeniowo, ale mają trudności z uchwyceniem zależności długoterminowych i rzadkimi słowami.
+**Modele Markowa** - Uogólnienie N-gramów, gdzie zakłada się, że prawdopodobieństwo wystąpienia danego stanu (np. słowa) zależy tylko od ograniczonej liczby poprzednich stanów (własność Markowa).
+**Bag-of-Words (BoW)** - Reprezentacja tekstu jako nieuporządkowanego zbioru słów, zliczająca ich wystąpienia. Choć nie służy bezpośrednio do przewidywania sekwencji, jest podstawą wielu klasycznych technik klasyfikacji tekstu.
+**TF-IDF (Term Frequency-Inverse Document Frequency)** - Metoda ważenia słów, która ocenia ich znaczenie w dokumencie w kontekście całego korpusu. Przydatna w wyszukiwaniu informacji i kategoryzacji, ale mniej bezpośrednio w generowaniu sekwencji.
+
+Mimo swoich ograniczeń, te metody stanowiły fundament dla rozwoju bardziej zaawansowanych technik i wciąż znajdują zastosowanie w jakichś prostszych zadaniach.
+
 ## Podejścia AI w przetwarzaniu tekstu
 
 **Dokładne** - skupia się na zidentyfikowaniu i usunięciu kompletnie identycznych dokumentów. To podejście generuje klucz dla każdego dokumentu oraz grupuje te dokumenty przez ich klucze do kubełków, tak by trzymać jeden dokument na kubełek. Zaletą takiego podejścia jest efektywność, szybkość oraz niezawodność, a wadą jest ograniczenie do wykrywania idealnego dopasowania do treści, co może spowodować ominięcie semantycznie porównywalnych dokumentów z drobnymi wariacjami. 
@@ -70,6 +82,8 @@ TODO KACPER
 **Semantyczne** - reprezentuje najbardziej zaawansowane podejście wykorzystujące nowoczesne modele osadzania (embedding), które uchwytują znaczenie semantyczne danych, w połączeniu z technikami klasteryzacji do grupowania semantycznie podobnych treści. Badania wykazały, że deduplikacja semantyczna skutecznie zmniejsza rozmiar zbioru danych, jednocześnie utrzymując lub nawet poprawiając wydajność modelu. Jest szczególnie przydatna w wykrywaniu parafraz, tłumaczeń tego samego materiału oraz treści o identycznym znaczeniu. Aby dokonać deduplikacji semantycznej wpierw trzeba przekształcić każdy punkt danych na wektor za pomocą wstępnie wytrenowanego modelu. Grupujemy te wektory w k klastrów przy użyciu algorytmu k-średnich (k-means). Wewnątrz każdego takiego klastra obliczane są pary podobieństw cosinusowych. Każdej parze danych, której podobieństwo cosinusowe przekracza ustalony próg, przypisuje się status semantycznych duplikatów. Z każdej grupy semantycznych duplikatów w klastrze zachowuje się tylko jeden reprezentatywny punkt danych, reszta jest usuwana.
 
 ## Wstęp teoretyczny do LSTM
+
+TODO Kacper dokończyć to
 
 LSTM jest ulepszoną wersją RNN (Recurrent Neural Network), która świetnie działaja w większej ilości problemów i są powszechnie stosowane. Zaprojektowane są by rozwiązywać długoterminowe problemy zależności. Ich zapamiętywanie informacji w długim przedziale czasu jest rzeczą dla nich naturalną. Sieci neuronowe mają budowę zapętlonego łańcucha. LSTM również taką ma, natomiast każdy moduł jest inny i niekoniecznie jest taki prosty jak we wszystkich RNN. 
 Jakby porównać to do układów cyfrowych, zwykły RNN jest układem z jedną bramką, natomast LSTM ma tych bramek więcej, przez co mogą wyjść różne wartości na wyjście. Kontynuując analogię do układów cyfrowych powiedzmy że LSTM ma umiejętność tworzenia oraz usuwania bramek w swoim układzie, 
@@ -143,6 +157,8 @@ Przykładowo, dla słownika `ale = 0, ala = 1, ma = 2, kota = 3` i jedynej danej
 
 TODO KACPER opisać ze uzywamy pytorch
 
+W ramach projektu model LSTM został zaimplementowany za pomocą frameworka PyTorch. 
+
 ```py
 import torch
 import torch.nn as nn
@@ -167,6 +183,10 @@ class LSTMWordPredictor(nn.Module):
 ```
 
 TODO KACPER o co chodzi w tym kodzie
+
+Mamy klasę LSTMWordPredictor z konstruktorem modelu (__init__) i parametramy `vocab_size`, `embedding_dim`, `hidden_dim`. `vocab_size` oznacza liczbę całkowitą unikalnych słów w słowniku, na podstawie którego model będzie operował, `embedding_dim` jest wymiarem wektorów osadzeń (embeddings), gdzie każde słowo będzie reprezentowane przez gęsty wektor o tej długości. `hidden_dim` jest liczbą jednostek w warstwie ukrytej LSTM, definiuje "pojemność" pamięci modelu. W konstruktorze definiujemy 3 warstwy. Pierwszą z nich, czyli warstwa osadzenia (self.embedding) odpowiada za transformację indeksów słów (będących liczbami całkowitymi) na gęste wektory liczbowe, czyli osadzenia. Jest to fundamentalny krok, pozwalający modelowi na naukę semantycznych reprezentacji poszczególnych słów. Kolejną inicjalizowaną warstwą jest główna warstwa LSTM (self.lstm), która przetwarza sekwencje wektorów osadzeń (embeddingów) dostarczonych przez poprzednią warstwę. Argument `batch_first` informuje warstwę, że dane wejściowe będą miały wymiarowość, gdzie pierwszy wymiar to rozmiar batcha. Ostatnią warstwą jest warstwa w pełni połączona (liniowa) (self.fc), która ma za zadanie zmapowanie wyjścia z warstwy LSTM (które ma `hidden_dim` wymiarów) na wektor o rozmiarze `vocab_size`. Ten finalny wektor reprezentuje logity, czyli nieznormalizowane prawdopodobieństwa, dla każdego słowa w słowniku, wskazując, które z nich jest najbardziej prawdopodobne jako następne w sekwencji.
+
+Metoda `forward` definiuje sposób, w jaki dane przepływają przez model podczas predykcji (tzw. forward pass). Na wejściu (x) otrzymuje tensor zawierający sekwencje indeksów słów. Najpierw dane te są przekazywane przez warstwę LSTM. Warstwa LSTM zwraca pełne wyjście dla każdego kroku czasowego oraz ostatni stan ukryty i stan komórki (które w tym konkretnym przypadku nie są bezpośrednio wykorzystywane do dalszej predykcji, ale są kluczowe dla wewnętrznego działania LSTM). Do przewidzenia następnego słowa wykorzystujemy jedynie wyjście LSTM z ostatniego kroku czasowego analizowanej sekwencji wejściowej. To wyjście jest następnie przekazywane przez warstwę w pełni połączoną, aby uzyskać wspomniany wcześniej rozkład prawdopodobieństwa nad całym słownikiem. Ostatecznie model zwraca te logity jako wynik swojej predykcji. 
 
 # Trenowanie i testowanie modelu
 
