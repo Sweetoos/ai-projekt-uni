@@ -51,6 +51,7 @@ python3 src/3_predict.py
 # Cel projektu
 
 TODO KACPER: przewidywanie tekstu, autouzupełnianie, nauka LSTM
+finished
 
 Głównym celem projektu było zbadanie i zaimplementowanie modelu do przewidywania następnego słowa w sekwencji tekstowej, z potencjalnym zastosowaniem w systemach autouzupełniania. Projekt skupiał się na wykorzystaniu architektury sieci neuronowej typu long Short-Term Memory (LSTM). Dodatkowym clem było praktyczne zapoznanie się z działaniem, trenowaniem oraz ewaluacją modeli LSTM w kontekście przetwarzania języka naturalnego.
 
@@ -62,7 +63,7 @@ W zależności od modelu, który piszemy, dane będą się różnić, ale cel po
 
 ## Klasyczne podejścia w przetwarzaniu tekstu
 
-TODO KACPER
+TODO KACPER finished
 
 Przed erą zaawansowanych modeli głębokiego nauczania, przetwarzanie tekstu było oparte o metody statystyczne i algorytmiczne. Kluczowymi podejściami, szczególnie w kontekście modelowania języka i przewidywania tekstu, należą:
 
@@ -183,6 +184,7 @@ class LSTMWordPredictor(nn.Module):
 ```
 
 TODO KACPER o co chodzi w tym kodzie
+to chyba jest finished, nie wiem 
 
 Mamy klasę LSTMWordPredictor z konstruktorem modelu (__init__) i parametramy `vocab_size`, `embedding_dim`, `hidden_dim`. `vocab_size` oznacza liczbę całkowitą unikalnych słów w słowniku, na podstawie którego model będzie operował, `embedding_dim` jest wymiarem wektorów osadzeń (embeddings), gdzie każde słowo będzie reprezentowane przez gęsty wektor o tej długości. `hidden_dim` jest liczbą jednostek w warstwie ukrytej LSTM, definiuje "pojemność" pamięci modelu. W konstruktorze definiujemy 3 warstwy. Pierwszą z nich, czyli warstwa osadzenia (self.embedding) odpowiada za transformację indeksów słów (będących liczbami całkowitymi) na gęste wektory liczbowe, czyli osadzenia. Jest to fundamentalny krok, pozwalający modelowi na naukę semantycznych reprezentacji poszczególnych słów. Kolejną inicjalizowaną warstwą jest główna warstwa LSTM (self.lstm), która przetwarza sekwencje wektorów osadzeń (embeddingów) dostarczonych przez poprzednią warstwę. Argument `batch_first` informuje warstwę, że dane wejściowe będą miały wymiarowość, gdzie pierwszy wymiar to rozmiar batcha. Ostatnią warstwą jest warstwa w pełni połączona (liniowa) (self.fc), która ma za zadanie zmapowanie wyjścia z warstwy LSTM (które ma `hidden_dim` wymiarów) na wektor o rozmiarze `vocab_size`. Ten finalny wektor reprezentuje logity, czyli nieznormalizowane prawdopodobieństwa, dla każdego słowa w słowniku, wskazując, które z nich jest najbardziej prawdopodobne jako następne w sekwencji.
 
