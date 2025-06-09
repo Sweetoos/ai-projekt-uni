@@ -86,8 +86,16 @@ Mimo swoich ograniczeń, te metody stanowiły fundament dla rozwoju bardziej zaa
 
 TODO Kacper dokończyć to
 
-LSTM jest ulepszoną wersją RNN (Recurrent Neural Network), która świetnie działaja w większej ilości problemów i są powszechnie stosowane. Zaprojektowane są by rozwiązywać długoterminowe problemy zależności. Ich zapamiętywanie informacji w długim przedziale czasu jest rzeczą dla nich naturalną. Sieci neuronowe mają budowę zapętlonego łańcucha. LSTM również taką ma, natomiast każdy moduł jest inny i niekoniecznie jest taki prosty jak we wszystkich RNN. 
-Jakby porównać to do układów cyfrowych, zwykły RNN jest układem z jedną bramką, natomast LSTM ma tych bramek więcej, przez co mogą wyjść różne wartości na wyjście. Kontynuując analogię do układów cyfrowych powiedzmy że LSTM ma umiejętność tworzenia oraz usuwania bramek w swoim układzie, 
+Sieci LSTM są specjalnym rodzajem RNN (Recurrent Neural Network), które zostały opracowane, aby znacznie lepiej radzić sobie z zapamiętywaniem przez długi czas. W standardowych sieciach problemem jest tendencja do "zapominania" informacji z wcześniejszych etapów sekwencji, gdy sekwencja stanie się długa. LSTM został stworzony po to, by poradzić sobie z tym problemem. Mają wbudowaną taką wewnętrzną "pamięć" zwaną stanem komórki (cell state) oraz specjalnych struktur kontrolujących przepływ informacji, zwykle zwanych bramkami.
+
+Stan komórki jest główną linią pamięci, biegnącą przez całą sieć LSTM od jednego kroku przetwarzania sekwencji do następnego. Informacje na tej linii mogą być przechowywane, modyfikowane lub ususuwane w kontrolowany sposób. Mogą również przebiegać w dużej mierze niezmienione, co pozwala sieci "pamiętać" istotne rzeczy z odległej przeszłości sekwencji. Jest to istotna różnica pomiędzy LSTM a prostszymi RNN. 
+
+Struktury kontrolujące (bramki) można podzielić na 3 typy: 
+1. Mechanizm Zapominania (Forget Gate)
+2. Mechanizm Wejściowy (Input Gate)
+3. Mechanizm Wyjściowy (Output Gate)
+
+Te struktury działają w powyższej kolejności. W bramce zapominania jest podejmowana decyzja, które informacje z poprzedniego stanu komórki powinny zostać zapomniane lub odrzucone. Następnie w bramce wejściowej LSTM decyduje, jakie nowe informacje z bieżącego fragmentu danych (np. aktualizowanie danego słowa) są na tyle ważne, by je zapisać w stanie komórki. Ten mechanizm składa się z dwóch części - wpierw identyfikuje, które wartości z nowych danych warto zaktualizować, a potem tworzy listę potencjalnych nowych informacji, które mogłyby zostać dodane. Łącząc te kroki pozwala nam selektywnie zaktualizować stan komórki o nowe istniejące dane. Na końcu za pomocą bramki wyjściowej na podstawie zaktualizowanego stanu komórki (która jest mieszanką starych i nowych informacji), LSTM decyduje, co powinno być wynikiem przetwarzania w bieżącym kroku. Ten wynik staje się również tzw. stanem ukrytym, który jest formą krótkoterminowej pamięci przekazywanej do następnego kroku przetwarzania i używanej przez mechanizmy kontrolne w kolejnym etapie. Mechanizm wyjściowy filtruje informacje ze stanu komórki, aby wygenerować użyteczne wyjście. 
 
 # Przygotowanie danych
 
@@ -297,6 +305,11 @@ Z tego powodu uznajemy model za dostatecznie dobry dla naszego przypadku.
 # Podsumowanie
 
 TODO KACPER
+
+Projekt miał na celu zbudowanie i przetestowanie modelu opartego na architekturze LSTM do przewidywania następnego słowa w sekwencji, z myślą o zastosowaniach takich jak autouzupełnianie tekstu. Realizacja składała się z kilku kroków takich jak oczyszczenie danych tekstowych (w tym lematyzację i filtrowanie słownika), implementację modelu LSTM przy użyciu biblioteki PyTorch oraz iteracyjne trenowanie i testowanie różnych konfiguracji modelu.
+
+Eksperymenty wykazały, że:
+TODO eksperymenty wykazały (?)
 
 # Bibliografia
 
