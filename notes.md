@@ -1,50 +1,23 @@
-# Zasoby
-- https://pytorch.org/tutorials/beginner/nlp/sequence_models_tutorial.html
-- https://medium.com/@MalikSaadAhmed/text-generation-using-lstms-and-gpt-2-in-pytorch-8097c948ccd8
-- Dataset https://huggingface.co/datasets/chirunder/text_messages
-- https://developer.nvidia.com/blog/mastering-llm-techniques-data-preprocessing
-- https://colah.github.io/posts/2015-08-Understanding-LSTMs/
-- https://pl.eitca.org/sztuczna-inteligencja/eitc-ai-dltf-g%C5%82%C4%99bokie-uczenie-z-tensorflow/rekurencyjne-sieci-neuronowe-w-tensorflow/Przyk%C5%82ad-rnn-w-tensorflow/egzamin-przegl%C4%85d-rnn-przyk%C5%82ad-w-tensorflow/co-to-jest-kom%C3%B3rka-lstm-i-dlaczego-jest-u%C5%BCywana-w-implementacji-rnn/
-- https://web.stanford.edu/~jurafsky/slp3/3.pdf
-
-# Uruchamianie (mac)
-```
-brew install git-lfs
-
-python3 -m venv venv
-source venv/bin/activate
-pip3 install -r requirements.txt
-
-git lfs install
-git clone https://huggingface.co/datasets/chirunder/text_messages
-
-source venv/bin/activate
-python3 src/1_prepare_data.py
-python3 src/2_train.py
-python3 src/3_predict.py
-```
-
-# Treść
-
+# Spis treści
 1. Cel projektu
 2. Wstęp teoretyczny
-  - Wstęp do Danych
-  - Klasyczne podejścia w przetwarzaniu tekstu
-  - Podejścia AI w przetwarzaniu tekstu
-  - Wstęp teoretyczny do LSTM
+    1. Wstęp do Danych
+    2. Klasyczne podejścia w przetwarzaniu tekstu
+    3. Podejścia AI w przetwarzaniu tekstu
+    4. Wstęp teoretyczny do LSTM
 3. Przygotowanie danych
-  - Wybór zbioru gotowych do trenowania
-  - Format danych zbioru
-  - Przygotowanie zbioru do uczenia
-  - Lematyzacja
-  - Sposób kodowania
-  - Reprezentacja danych treningowych
+    1. Wybór zbioru gotowych do trenowania
+    2. Format danych zbioru
+    3. Przygotowanie zbioru do uczenia
+    4. Lematyzacja
+    5. Sposób kodowania
+    6. Reprezentacja danych treningowych
 4. Model LSTM przewidujący następne słowo
-  - Zasada działania
+    1. Zasada działania
 5. Trenowanie i testowanie modelu
-  - Prototyp #1
-  - Prototyp #2
-  - Wersja końcowa
+    1. Prototyp #1
+    2. Prototyp #2
+    3. Wersja końcowa
 6. Podsumowanie
 7. Bibliografia
 
@@ -321,5 +294,21 @@ Tadeusiewicz R., Sieci Neuronowe, Kraków, 2008
 
 ## Pozycje internetowe
 
-Jan K., Tytuł, https://example.com
-Dostęp 01.01.1970
+- Malik Saad Ahmed, Text Generation Using LSTMs and GPT-2 In PyTorch
+https://medium.com/@MalikSaadAhmed/text-generation-using-lstms-and-gpt-2-in-pytorch-8097c948ccd8
+Dostęp 03.04.2025
+
+- Amit Beiweiss & Nicole Luo, Mastering LLm Techniques Data Preprocessing
+https://developer.nvidia.com/blog/mastering-llm-techniques-data-preprocessing
+Dostęp 17.05.2025
+
+- Christopher Olah, Understanding LSTMs
+https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+Dostęp 18.05.2025
+
+- Czym jest komórka LSTM i dlaczego jest wykorzystywana w implementacji RNN?
+https://pl.eitca.org/sztuczna-inteligencja/eitc-ai-dltf-g%C5%82%C4%99bokie-uczenie-z-tensorflow/rekurencyjne-sieci-neuronowe-w-tensorflow/Przyk%C5%82ad-rnn-w-tensorflow/egzamin-przegl%C4%85d-rnn-przyk%C5%82ad-w-tensorflow/co-to-jest-kom%C3%B3rka-lstm-i-dlaczego-jest-u%C5%BCywana-w-implementacji-rnn/
+Dostęp 02.06.2025
+
+- Daniel Jurafsky & James H. Martin, Speech and Language Processing ch. 3, https://web.stanford.edu/~jurafsky/slp3/3.pdf
+Dostęp 02.06.2025
