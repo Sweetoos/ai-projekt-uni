@@ -41,8 +41,11 @@ TODO KACPER finished
 Przed erą zaawansowanych modeli głębokiego nauczania, przetwarzanie tekstu było oparte o metody statystyczne i algorytmiczne. Kluczowymi podejściami, szczególnie w kontekście modelowania języka i przewidywania tekstu, należą:
 
 **N-gramy** - Sekwencje N kolejnych słów (lub znaków) w tekście. Modele oparte na N-gramach przewidują następne słowo na podstawie prawdopodobieństwa jego wystąpienia po sekwencji N-1 poprzedzających słów, obliczanego na podstawie częstotliwości w korpusie treningowym. Są proste obliczeniowo, ale mają trudności z uchwyceniem zależności długoterminowych i rzadkimi słowami.
+
 **Modele Markowa** - Uogólnienie N-gramów, gdzie zakłada się, że prawdopodobieństwo wystąpienia danego stanu (np. słowa) zależy tylko od ograniczonej liczby poprzednich stanów (własność Markowa).
+
 **Bag-of-Words (BoW)** - Reprezentacja tekstu jako nieuporządkowanego zbioru słów, zliczająca ich wystąpienia. Choć nie służy bezpośrednio do przewidywania sekwencji, jest podstawą wielu klasycznych technik klasyfikacji tekstu.
+
 **TF-IDF (Term Frequency-Inverse Document Frequency)** - Metoda ważenia słów, która ocenia ich znaczenie w dokumencie w kontekście całego korpusu. Przydatna w wyszukiwaniu informacji i kategoryzacji, ale mniej bezpośrednio w generowaniu sekwencji.
 
 Mimo swoich ograniczeń, te metody stanowiły fundament dla rozwoju bardziej zaawansowanych technik i wciąż znajdują zastosowanie w jakichś prostszych zadaniach.
@@ -57,8 +60,6 @@ Mimo swoich ograniczeń, te metody stanowiły fundament dla rozwoju bardziej zaa
 
 ## Wstęp teoretyczny do LSTM
 
-TODO Kacper dokończyć to
-
 Sieci LSTM są specjalnym rodzajem RNN (Recurrent Neural Network), które zostały opracowane, aby znacznie lepiej radzić sobie z zapamiętywaniem przez długi czas. W standardowych sieciach problemem jest tendencja do "zapominania" informacji z wcześniejszych etapów sekwencji, gdy sekwencja stanie się długa. LSTM został stworzony po to, by poradzić sobie z tym problemem. Mają wbudowaną taką wewnętrzną "pamięć" zwaną stanem komórki (cell state) oraz specjalnych struktur kontrolujących przepływ informacji, zwykle zwanych bramkami.
 
 Stan komórki jest główną linią pamięci, biegnącą przez całą sieć LSTM od jednego kroku przetwarzania sekwencji do następnego. Informacje na tej linii mogą być przechowywane, modyfikowane lub ususuwane w kontrolowany sposób. Mogą również przebiegać w dużej mierze niezmienione, co pozwala sieci "pamiętać" istotne rzeczy z odległej przeszłości sekwencji. Jest to istotna różnica pomiędzy LSTM a prostszymi RNN. 
@@ -70,11 +71,13 @@ Struktury kontrolujące (bramki) można podzielić na 3 typy:
 
 Te struktury działają w powyższej kolejności. W bramce zapominania jest podejmowana decyzja, które informacje z poprzedniego stanu komórki powinny zostać zapomniane lub odrzucone. Następnie w bramce wejściowej LSTM decyduje, jakie nowe informacje z bieżącego fragmentu danych (np. aktualizowanie danego słowa) są na tyle ważne, by je zapisać w stanie komórki. Ten mechanizm składa się z dwóch części - wpierw identyfikuje, które wartości z nowych danych warto zaktualizować, a potem tworzy listę potencjalnych nowych informacji, które mogłyby zostać dodane. Łącząc te kroki pozwala nam selektywnie zaktualizować stan komórki o nowe istniejące dane. Na końcu za pomocą bramki wyjściowej na podstawie zaktualizowanego stanu komórki (która jest mieszanką starych i nowych informacji), LSTM decyduje, co powinno być wynikiem przetwarzania w bieżącym kroku. Ten wynik staje się również tzw. stanem ukrytym, który jest formą krótkoterminowej pamięci przekazywanej do następnego kroku przetwarzania i używanej przez mechanizmy kontrolne w kolejnym etapie. Mechanizm wyjściowy filtruje informacje ze stanu komórki, aby wygenerować użyteczne wyjście. 
 
+TODO KACPER: LSTM lepszy od RNN, bo problem znikajacego gradientu
+
 # Przygotowanie danych
 
 ## Wybór zbioru
 
-Do projektu wykorzystujemy dataset [chirunder/text_messages z Huggingface](https://huggingface.co/datasets/chirunder/text_messages).
+Do projektu wykorzystujemy dataset [chirunder/text_messages z Huggingface](https://huggingface.co/datasets/chirunder/text_messages). Zbiór zawiera interesujące nas dane - wiele krótkich zdań/wiadomości, napisanych prostym językiem angielskim.
 
 ## Format danych zbioru
 
@@ -88,7 +91,7 @@ o wadze 281.7 MB.
 
 Aby model mógł efektywnie się uczyć i sugerować poprawne podpowiedzi, surowe dane nalezy
 przetworzyć. W tym celu usuwamy interpunkcję, liczby, zamieniamy słowa na małe litery. Czyścimy
-zbiór z niechcianych podpowiedzi. Zbiór przetwarzamy za pomocą skryptu w napisanego w języku python.
+zbiór z niechcianych podpowiedzi. Zbiór przetwarzamy za pomocą skryptu napisanego w języku python.
 Jest on zapisany w pliku `src/1_prepare_data.py`.
 
 Dane przygotowujemy w następujący sposób:
@@ -137,8 +140,6 @@ Przykładowo, dla słownika `ale = 0, ala = 1, ma = 2, kota = 3` i jedynej danej
 
 # Model LSTM przewidujący następne słowo
 
-TODO KACPER opisać ze uzywamy pytorch
-
 W ramach projektu model LSTM został zaimplementowany za pomocą frameworka PyTorch. 
 
 ```py
@@ -163,9 +164,6 @@ class LSTMWordPredictor(nn.Module):
         out = self.fc(out[:, -1, :])  # Use output from last timestep
         return out
 ```
-
-TODO KACPER o co chodzi w tym kodzie
-to chyba jest finished, nie wiem 
 
 Mamy klasę LSTMWordPredictor z konstruktorem modelu (__init__) i parametramy `vocab_size`, `embedding_dim`, `hidden_dim`. `vocab_size` oznacza liczbę całkowitą unikalnych słów w słowniku, na podstawie którego model będzie operował, `embedding_dim` jest wymiarem wektorów osadzeń (embeddings), gdzie każde słowo będzie reprezentowane przez gęsty wektor o tej długości. `hidden_dim` jest liczbą jednostek w warstwie ukrytej LSTM, definiuje "pojemność" pamięci modelu. W konstruktorze definiujemy 3 warstwy. Pierwszą z nich, czyli warstwa osadzenia (self.embedding) odpowiada za transformację indeksów słów (będących liczbami całkowitymi) na gęste wektory liczbowe, czyli osadzenia. Jest to fundamentalny krok, pozwalający modelowi na naukę semantycznych reprezentacji poszczególnych słów. Kolejną inicjalizowaną warstwą jest główna warstwa LSTM (self.lstm), która przetwarza sekwencje wektorów osadzeń (embeddingów) dostarczonych przez poprzednią warstwę. Argument `batch_first` informuje warstwę, że dane wejściowe będą miały wymiarowość, gdzie pierwszy wymiar to rozmiar batcha. Ostatnią warstwą jest warstwa w pełni połączona (liniowa) (self.fc), która ma za zadanie zmapowanie wyjścia z warstwy LSTM (które ma `hidden_dim` wymiarów) na wektor o rozmiarze `vocab_size`. Ten finalny wektor reprezentuje logity, czyli nieznormalizowane prawdopodobieństwa, dla każdego słowa w słowniku, wskazując, które z nich jest najbardziej prawdopodobne jako następne w sekwencji.
 
@@ -277,16 +275,20 @@ Z tego powodu uznajemy model za dostatecznie dobry dla naszego przypadku.
 
 # Podsumowanie
 
-TODO KACPER
-
 Projekt miał na celu zbudowanie i przetestowanie modelu opartego na architekturze LSTM do przewidywania następnego słowa w sekwencji, z myślą o zastosowaniach takich jak autouzupełnianie tekstu. Realizacja składała się z kilku kroków takich jak oczyszczenie danych tekstowych (w tym lematyzację i filtrowanie słownika), implementację modelu LSTM przy użyciu biblioteki PyTorch oraz iteracyjne trenowanie i testowanie różnych konfiguracji modelu.
 
 Eksperymenty wykazały, że:
 TODO eksperymenty wykazały (?)
+- ze warto studiowac
+- dane nalezy przygotować pod to, co chcemy trenowac
+- najwazniejsze jest miec duzo danych, drugorzedne duzo epok
+- udało się zrobic fajny przyjemny model, malo wazy i znosnie dziala
 
 # Bibliografia
 
 ## Pozycje zwarte
+
+TODO KACPER: albo jakąś dodać albo usunąć pozycje zwarte
 
 Tadeusiewicz R., Sieci Neuronowe, Kraków, 2008
 
