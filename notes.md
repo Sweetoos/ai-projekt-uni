@@ -71,7 +71,9 @@ Struktury kontrolujące (bramki) można podzielić na 3 typy:
 
 Te struktury działają w powyższej kolejności. W bramce zapominania jest podejmowana decyzja, które informacje z poprzedniego stanu komórki powinny zostać zapomniane lub odrzucone. Następnie w bramce wejściowej LSTM decyduje, jakie nowe informacje z bieżącego fragmentu danych (np. aktualizowanie danego słowa) są na tyle ważne, by je zapisać w stanie komórki. Ten mechanizm składa się z dwóch części - wpierw identyfikuje, które wartości z nowych danych warto zaktualizować, a potem tworzy listę potencjalnych nowych informacji, które mogłyby zostać dodane. Łącząc te kroki pozwala nam selektywnie zaktualizować stan komórki o nowe istniejące dane. Na końcu za pomocą bramki wyjściowej na podstawie zaktualizowanego stanu komórki (która jest mieszanką starych i nowych informacji), LSTM decyduje, co powinno być wynikiem przetwarzania w bieżącym kroku. Ten wynik staje się również tzw. stanem ukrytym, który jest formą krótkoterminowej pamięci przekazywanej do następnego kroku przetwarzania i używanej przez mechanizmy kontrolne w kolejnym etapie. Mechanizm wyjściowy filtruje informacje ze stanu komórki, aby wygenerować użyteczne wyjście. 
 
-TODO KACPER: LSTM lepszy od RNN, bo problem znikajacego gradientu
+`TODO KACPER: LSTM lepszy od RNN, bo problem znikajacego gradientu`
+
+LSTM ma przewagę nad tradycyjnymi RNN zdolnością do radzenia sobie z problemem zanikającego gradientu oraz w mniejszym stopniu z problemem eksplodującego gradientu. W standardowych RNN'ach, podczas procesu uczenia metodą propagacji wstecznej w czasie, gradienty są mnożone przez te same macierze wag na każdym kroku czasowym. Zanikający gradient jest w przypadku małych liczb, natomiast eksplodujący gradient w przypadku dużych. W przypadku zanikającego gradientu prostego problemem jest wolne uczenie lub nawet jego zatrzymanie oraz niemożność nauczenia się długoterminowych zależności, czyli jak gradient zanika, sieć nie jest w stanie "dowiedzieć się" jak błąd na końcu długiej sekwencji zależy od tego, co działo się na jej początku. W przypadku eksplodującego gradientu gradient uczy się niestabilnie, może przeskoczyć jakieś iteracje uczenia. LSTM zapobiega temu w taki sposób, że stany komórki są głównie addytywne, a nie multiplikatywne przez kolejne macierze wag, co pozwala gradientom przepływać przez długie sekwencje w bardziej niezmienionej formie. W przypadku bramek to w bramce zapominania gradient może "nauczyć się" resetować pamięć, co może pomóc w przerwaniu długich łańcuchów mnożeń, które prowadzą do zanikania. Z kolei bramka wejściowa kontroluje dodawane informacje, które wpływają do gradientu. 
 
 # Przygotowanie danych
 
@@ -277,12 +279,18 @@ Z tego powodu uznajemy model za dostatecznie dobry dla naszego przypadku.
 
 Projekt miał na celu zbudowanie i przetestowanie modelu opartego na architekturze LSTM do przewidywania następnego słowa w sekwencji, z myślą o zastosowaniach takich jak autouzupełnianie tekstu. Realizacja składała się z kilku kroków takich jak oczyszczenie danych tekstowych (w tym lematyzację i filtrowanie słownika), implementację modelu LSTM przy użyciu biblioteki PyTorch oraz iteracyjne trenowanie i testowanie różnych konfiguracji modelu.
 
-Eksperymenty wykazały, że:
-TODO eksperymenty wykazały (?)
-- ze warto studiowac
-- dane nalezy przygotować pod to, co chcemy trenowac
+Eksperymenty wykazały kilka wniosków:
+- Projekt dostarczył pewnego doświadczenia jak działa sieć LSTM, od przygotowania danych, przez implementację modelu po jego trenowanie i ewaluację.
+- Jakość i sposób przygotowania danych wejściowych ma fundamentalne znaczenie dla wydajności modelu. Procesy takie jak lematyzacja, czyszczenie tekstu, filtrowanie słownika (np. do najlpopularniejszych słów i użycie tokenu \<UNK\>) oraz odpowiednie kodowanie danych są niezbędne, aby model mógł efektywnie się uczyć i generować sensowne wyniki.
+- Ilość danych treningowych oraz odpowiednia liczba epok treningu są istotne. Większa ilość danych pozwala modelowi lepiej generalizować i uczyć się bardziej złożonych wzorców, kiedy odpowiednia liczba epok zapewnia, że model ma wystarczająco dużo czasu na konwergencję, choć należy uważać na przetrenowanie.
+
+Mimo pewnych ograniczeń udało się opracować model LSTM, który jest stosunkowo niewielki pod względem zajmowanej pamięci, a jednocześnie generuje predykcje na zadowalającym poziomie, szczególnie w autouzupełnianiu małych wartości tekstowych. Model poprawnie uczy się podstawowych struktur gramatycznych i częstych sekwencji słów.
+
+to do usunięcia
+- warto studiowac (warto) ze sie nauczylismy tutaj, fajnie juhu
+- dane nalezy przygotować pod to, co chcemy trenowac 
 - najwazniejsze jest miec duzo danych, drugorzedne duzo epok
-- udało się zrobic fajny przyjemny model, malo wazy i znosnie dziala
+- udało się zrobic fajny przyjemny model, malo wazy i znosnie dziala, jest fajno
 
 # Bibliografia
 
@@ -290,6 +298,7 @@ TODO eksperymenty wykazały (?)
 
 TODO KACPER: albo jakąś dodać albo usunąć pozycje zwarte
 
+(a wiem skąd to się wzięło, to ty to wpisałeś tutaj jako przykład od Kiełkowicza xd)
 Tadeusiewicz R., Sieci Neuronowe, Kraków, 2008
 
 (ibidem, strona)
