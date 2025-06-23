@@ -10,17 +10,13 @@
 
 #let bg_color = rgb("f2f2f2")
 
-#stack(
-  dir: ltr,
-  image("assets/logo_pk.png", width: 8cm),
-  align(right)[
-    #v(1em)
-    #text(size: 1.1em)[
-      Kraków, 8 czerwca 2025 \
-      Grupa P1
-    ]
-  ],
-)
+#stack(dir: ltr, image("assets/logo_pk.png", width: 8cm), align(right)[
+  #v(1em)
+  #text(size: 1.1em)[
+    Kraków, 8 czerwca 2025 \
+    Grupa P1
+  ]
+])
 
 #v(2em)
 
@@ -420,6 +416,8 @@ Aby model nie uczył się rzadkich wyrazów, które nie będą chętnie wybieran
 postanawiamy trenować zbiór 10 000 najpopularniejszymi wyrazami, a resztę zastępować tokenem `<UNK>`.
 Ta zmiana powinna także znacząco zmniejszyć rozmiar modelu.
 
+#pagebreak()
+
 == Prototyp #2
 Prototyp #2 ma poniższe parametry:
 - 100% danych do treningu
@@ -505,6 +503,8 @@ Mimo pewnych ograniczeń udało się opracować model LSTM, który jest stosunko
 zajmowanej pamięci, a jednocześnie generuje predykcje na zadowalającym poziomie, szczególnie
 w autouzupełnianiu małych wartości tekstowych. Model poprawnie uczy się podstawowych struktur
 gramatycznych i częstych sekwencji słów.
+
+#pagebreak()
 
 = Bibliografia
 
